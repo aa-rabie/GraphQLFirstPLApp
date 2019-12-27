@@ -1,3 +1,4 @@
+using System;
 using GraphQLFirstPLApp.Data;
 using GraphQLFirstPLApp.Data.Repositories;
 using Microsoft.AspNetCore.Builder;
@@ -10,6 +11,7 @@ using GraphQLFirstPLApp.GraphQlSchema;
 using GraphQL;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
+using GraphQLFirstPLApp.Data.Initialization;
 
 namespace GraphQLFirstPLApp
 {
@@ -27,10 +29,11 @@ namespace GraphQLFirstPLApp
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<CarvedRockDbContext>(options =>
+            services.AddDbContextPool<CarvedRockDbContext>(options =>
                 options.UseSqlServer(Configuration["ConnectionStrings:CarvedRock"]));
             services.AddScoped<ProductRepository>();
             services.AddScoped<ProductReviewRepository>();
+            services.AddScoped<IDbInitializer>(s => new DbInitializer(s.GetRequiredService<IServiceScopeFactory>()));
             services.AddScoped<IDependencyResolver>(s => new FuncDependencyResolver(s.GetRequiredService));
             services.AddScoped<CarvedRockSchema>();
             services.AddGraphQL(o => {
@@ -44,7 +47,7 @@ namespace GraphQLFirstPLApp
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider serviceProvider)
         {
             if (env.IsDevelopment())
             {
@@ -64,6 +67,9 @@ namespace GraphQLFirstPLApp
             //{
             //    endpoints.MapControllers();
             //});
+
+            var dbInit = serviceProvider.GetService<IDbInitializer>();
+            dbInit.Init();
         }
     }
 }

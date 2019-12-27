@@ -10,16 +10,18 @@ namespace GraphQLFirstPLApp.Data.Repositories
 {
     public class ProductRepository
     {
-        private readonly CarvedRockDbContext _dbContext;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public ProductRepository(CarvedRockDbContext dbContext)
+        public ProductRepository(IServiceScopeFactory scopeFactory)
         {
-            _dbContext = dbContext;
+            _scopeFactory = scopeFactory;
         }
 
-        public Task<List<Product>> GetAll()
+        public async Task<List<Product>> GetAll()
         {
-            return _dbContext.Products.ToListAsync();
+            using var scope = _scopeFactory.CreateScope();
+            using var dbContext = scope.ServiceProvider.GetRequiredService<CarvedRockDbContext>();
+            return await dbContext.Products.ToListAsync();
         }
     }
 }

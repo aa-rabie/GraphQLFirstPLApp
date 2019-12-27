@@ -11,16 +11,18 @@ namespace GraphQLFirstPLApp.Data.Repositories
 {
     public class ProductReviewRepository
     {
-        private readonly CarvedRockDbContext _dbContext;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public ProductReviewRepository(CarvedRockDbContext dbContext)
+        public ProductReviewRepository(IServiceScopeFactory scopeFactory)
         {
-            _dbContext = dbContext;
+            _scopeFactory = scopeFactory;
         }
 
-        public Task<List<ProductReview>> GetByProductId(int productId)
+        public async Task<List<ProductReview>> GetByProductId(int productId)
         {
-            return _dbContext.ProductReviews.Where(r => r.ProductId == productId).ToListAsync();
+            using var scope = _scopeFactory.CreateScope();
+            using var dbContext = scope.ServiceProvider.GetRequiredService<CarvedRockDbContext>();
+            return await dbContext.ProductReviews.Where(r => r.ProductId == productId).ToListAsync();
         }
     }
 }
