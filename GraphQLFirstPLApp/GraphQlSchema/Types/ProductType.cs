@@ -1,17 +1,14 @@
 ﻿using GraphQL.Types;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using GraphQL.DataLoader;
 using GraphQLFirstPLApp.Data.Repositories;
-using Microsoft.Extensions.DependencyInjection;
 using Entities = GraphQLFirstPLApp.Data.Entities;
+using GraphQLFirstPLApp.Data.Entities;
 
 namespace GraphQLFirstPLApp.GraphQLSchema.Types
 {
     public class ProductType : ObjectGraphType<Entities.Product>
     {
-        public ProductType(ProductReviewRepository repo)
+        public ProductType(IDataLoaderContextAccessor dataLoaderContextAccessor, ProductReviewRepository repo)
         {
             
             Field(t => t.Id);
@@ -23,7 +20,12 @@ namespace GraphQLFirstPLApp.GraphQLSchema.Types
             Field(t => t.Rating).Description("The (max 5) star customer rating");
             Field(t => t.Stock);
             Field<ProductTypeEnumType>("Type", "The type of product");
-            Field<ListGraphType<ProductReviewType>>("reviews", resolve: context => repo.GetByProductId(context.Source.Id));
+            Field<ListGraphType<ProductReviewType>>("reviews", resolve: context =>
+            {
+                var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader<int, ProductReview>(
+                    "GetReviewsByProductId",repo.GetByProductIds);
+                return loader.LoadAsync(context.Source.Id);
+            });
         }
     }
 }

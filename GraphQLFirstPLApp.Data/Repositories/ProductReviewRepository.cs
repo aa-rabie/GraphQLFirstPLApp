@@ -24,5 +24,13 @@ namespace GraphQLFirstPLApp.Data.Repositories
             using var dbContext = scope.ServiceProvider.GetRequiredService<CarvedRockDbContext>();
             return await dbContext.ProductReviews.Where(r => r.ProductId == productId).ToListAsync();
         }
+
+        public async Task<ILookup<int,ProductReview>> GetByProductIds(IEnumerable<int> productIds)
+        {
+            using var scope = _scopeFactory.CreateScope();
+            using var dbContext = scope.ServiceProvider.GetRequiredService<CarvedRockDbContext>();
+            var reviews = await dbContext.ProductReviews.Where(r => productIds.Contains(r.ProductId)).ToListAsync();
+            return reviews.ToLookup(r => r.ProductId);
+        }
     }
 }

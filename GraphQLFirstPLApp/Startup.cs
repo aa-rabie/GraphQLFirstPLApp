@@ -38,7 +38,8 @@ namespace GraphQLFirstPLApp
             services.AddScoped<CarvedRockSchema>();
             services.AddGraphQL(o => {
                 o.ExposeExceptions = Environment.IsDevelopment();
-            }).AddGraphTypes(ServiceLifetime.Scoped);
+            }).AddGraphTypes(ServiceLifetime.Scoped)
+                .AddDataLoader();
 
             services.Configure<IISServerOptions>(options =>
             {
