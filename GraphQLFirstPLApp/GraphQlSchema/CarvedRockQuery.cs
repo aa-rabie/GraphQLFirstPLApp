@@ -15,7 +15,13 @@ namespace GraphQLFirstPLApp.GraphQlSchema
         {
            
             Field<ListGraphType<ProductType>>("products", resolve: context => repo.GetAll());
-            
+            Field<ProductType>("product",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<IdGraphType>> {Name = "id"})
+                ,resolve: context =>
+                {
+                    var id = context.GetArgument<int>("id");
+                    return repo.GetProduct(id);
+                });
         }
     }
 }
